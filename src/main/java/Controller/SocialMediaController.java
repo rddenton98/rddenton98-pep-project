@@ -1,7 +1,5 @@
 package Controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import Model.Account;
 import Model.Message;
 import Service.AccountService;
@@ -11,6 +9,8 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
@@ -36,6 +36,11 @@ public class SocialMediaController {
         app.post("/register", this::newAccountHandler);
         app.post("/login", this::getAccountHandler);
         app.post("/messages", this::newMessageHandler);
+        app.get("/messages", this::getAllMessagesHandler);
+        app.get("/accounts/{account_id}/messages", this::getAllMessagesByUserHandler);
+        app.get("/messages/{message_id}", this::getMessageHandler);
+        app.patch("/messages/{message_id}", this::updateMessageHandler);
+        app.delete("messages/{message_id}", this::deleteMessageHandler);
 
         return app;
     }
@@ -89,10 +94,9 @@ public class SocialMediaController {
         ObjectMapper mapper = new ObjectMapper();
         Message message = mapper.readValue(ctx.body(), Message.class);
 
-        // TODO: implement checking if account exists in Account Service/DAO
         if (message.getMessage_text().isBlank() ||
-            message.getMessage_text().length() >= 255
-            
+            message.getMessage_text().length() >= 255 ||
+            accountService.getAccountById(message.getPosted_by()) == null
         ) {
             ctx.status(400);
             return;
@@ -109,16 +113,65 @@ public class SocialMediaController {
     }
 
     // Get all messages
-
+    private void getAllMessagesHandler(Context ctx) {
+        ArrayList<Message> messages = messageService.getAllMessages();
+        ctx.json(messages).status(200);
+    }
 
     // Get all messages for user
-
+    private void getAllMessagesByUserHandler(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("account_id"));
+        ArrayList<Message> messages = messageService.getAllMessagesByAccountId(id);
+        ctx.json(messages).status(200);
+    }
 
     // Get message by id
-
+    private void getMessageHandler(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("message_id"));
+        Message message = messageService.getMessage(id);
+        
+        if (message != null) {
+            ctx.json(message).status(200);
+        }
+        else {
+            ctx.status(200).result("");
+        }
+    }
 
     // Update message by id
+    private void updateMessageHandler(Context ctx) throws JsonProcessingException {
+        int id = Integer.parseInt(ctx.pathParam("message_id"));
+        ObjectMapper mapper = new ObjectMapper();
+        Message message = mapper.readValue(ctx.body(), Message.class);
+        message.setMessage_id(id);
 
+        if (message.getMessage_text().isBlank() ||
+            message.getMessage_text().length() >= 255
+        ) {
+            ctx.status(400);
+            return;
+        }
+
+        Message updatedMessage = messageService.updateMessage(message);
+
+        if (updatedMessage != null) {
+            ctx.json(mapper.writeValueAsString(updatedMessage)).status(200);
+        }
+        else {
+            ctx.status(400);
+        }
+    }
 
     // Delete message by id
+    private void deleteMessageHandler(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("message_id"));
+        Message message = messageService.deleteMessage(id);
+        
+        if (message != null) {
+            ctx.json(message).status(200);
+        }
+        else {
+            ctx.status(200).result("");
+        }
+    }
 }

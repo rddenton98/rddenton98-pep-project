@@ -33,9 +33,10 @@ public class MessageService {
 
     // Update message by id
     public Message updateMessage(Message message) {
-        // Check if message does not exist
-        if (this.messageDAO.getMessage(message.getMessage_id()) == null) {
-            return this.messageDAO.updateMessage(message);
+        // Check if message exists
+        if (this.messageDAO.getMessage(message.getMessage_id()) != null) {
+            this.messageDAO.updateMessage(message);
+            return this.messageDAO.getMessage(message.getMessage_id());
         }
 
         return null;
@@ -55,6 +56,6 @@ public class MessageService {
 
     // Get all messages for account_id
     public ArrayList<Message> getAllMessagesByAccountId(int id) {
-        return this.getAllMessagesByAccountId(id);
+        return this.messageDAO.getAllMessagesByAccountId(id);
     }
 }
