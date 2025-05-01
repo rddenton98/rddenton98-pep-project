@@ -34,7 +34,8 @@ public class SocialMediaController {
     public Javalin startAPI() {
         Javalin app = Javalin.create();
         app.post("/register", this::newAccountHandler);
-        app.get("/accounts", this::getAccountHandler);
+        app.post("/login", this::getAccountHandler);
+        app.post("/messages", this::newMessageHandler);
 
         return app;
     }
@@ -52,7 +53,7 @@ public class SocialMediaController {
         ObjectMapper mapper = new ObjectMapper();
         Account account = mapper.readValue(ctx.body(), Account.class);
 
-        if (account.getUsername().length() == 0 ||
+        if (account.getUsername().isBlank() ||
             account.getPassword().length() < 4
         ) {
             ctx.status(400);
@@ -84,7 +85,28 @@ public class SocialMediaController {
     }
 
     // Create new message
+    private void newMessageHandler(Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        Message message = mapper.readValue(ctx.body(), Message.class);
 
+        // TODO: implement checking if account exists in Account Service/DAO
+        if (message.getMessage_text().isBlank() ||
+            message.getMessage_text().length() >= 255
+            
+        ) {
+            ctx.status(400);
+            return;
+        }
+
+        Message addedMessage = messageService.addMessage(message);
+
+        if (addedMessage != null) {
+            ctx.json(mapper.writeValueAsString(addedMessage)).status(200);
+        }
+        else {
+            ctx.status(400);
+        }
+    }
 
     // Get all messages
 
