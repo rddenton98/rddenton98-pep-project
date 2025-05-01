@@ -11,7 +11,7 @@ public class AccountDAO {
         Connection connection = ConnectionUtil.getConnection();
         try {
             String sql = "INSERT INTO account(username, password) VALUES(?, ?);";
-            PreparedStatement ps = connection.prepareStatement(sql);
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, account.getUsername());
             ps.setString(2, account.getPassword());
             ps.executeUpdate();
