@@ -28,4 +28,9 @@ public class AccountService {
     public Account getAccount(Account account) {
         return this.accountDAO.getAccount(account);
     }
+
+    // Get an account by id
+    public Account getAccountById(int id) {
+        return this.accountDAO.getAccountById(id);
+    }
 }
